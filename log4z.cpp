@@ -49,7 +49,7 @@
 #include <iostream>
 
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <io.h>
 #include <shlwapi.h>
 #include <process.h>
@@ -108,7 +108,7 @@ static const size_t LOG_STRING_LEN[] =
     sizeof("FATAL") - 1,
 };
 
-#ifdef WIN32
+#ifdef _WIN32
 const static WORD LOG_COLOR[LOG_LEVEL_FATAL + 1] = {
     0,
     0,
@@ -155,7 +155,7 @@ public:
     }
     inline void clean(int index, int len)
     {
-#if !defined(__APPLE__) && !defined(WIN32) 
+#if !defined(__APPLE__) && !defined(_WIN32) 
        if (_file != NULL)
        {
           int fd = fileno(_file);
@@ -227,7 +227,7 @@ public:
     void lock();
     void unLock();
 private:
-#ifdef WIN32
+#ifdef _WIN32
     CRITICAL_SECTION _crit;
 #else
     pthread_mutex_t  _crit;
@@ -264,7 +264,7 @@ public:
     bool wait(int timeout = 0);
     bool post();
 private:
-#ifdef WIN32
+#ifdef _WIN32
     HANDLE _hSem;
 #elif defined(__APPLE__)
     dispatch_semaphore_t _semid;
@@ -280,7 +280,7 @@ private:
 //////////////////////////////////////////////////////////////////////////
 //! ThreadHelper
 //////////////////////////////////////////////////////////////////////////
-#ifdef WIN32
+#ifdef _WIN32
 static unsigned int WINAPI  threadProc(LPVOID lpParam);
 #else
 static void * threadProc(void * pParam);
@@ -297,12 +297,12 @@ public:
     virtual void run() = 0;
 private:
     unsigned long long _hThreadID;
-#ifndef WIN32
+#ifndef _WIN32
     pthread_t _phtreadID;
 #endif
 };
 
-#ifdef WIN32
+#ifdef _WIN32
 unsigned int WINAPI  threadProc(LPVOID lpParam)
 {
     ThreadHelper * p = (ThreadHelper *) lpParam;
@@ -524,7 +524,7 @@ const std::string Log4zFileHandler::readContent()
 
 static inline void sleepMillisecond(unsigned int ms)
 {
-#ifdef WIN32
+#ifdef _WIN32
     ::Sleep(ms);
 #else
     usleep(1000*ms);
@@ -533,7 +533,7 @@ static inline void sleepMillisecond(unsigned int ms)
 
 static inline struct tm timeToTm(time_t t)
 {
-#ifdef WIN32
+#ifdef _WIN32
 #if _MSC_VER < 1400 //VS2003
     return * localtime(&t);
 #else //vs2005->vs2013->
@@ -846,7 +846,7 @@ static bool parseConfigFromString(std::string content, std::map<std::string, Log
 
 bool isDirectory(std::string path)
 {
-#ifdef WIN32
+#ifdef _WIN32
     return PathIsDirectoryA(path.c_str()) ? true : false;
 #else
     DIR * pdir = opendir(path.c_str());
@@ -878,7 +878,7 @@ bool createRecursionDir(std::string path)
         if (cur.length() > 0 && !isDirectory(cur))
         {
             bool ret = false;
-#ifdef WIN32
+#ifdef _WIN32
             ret = CreateDirectoryA(cur.c_str(), NULL) ? true : false;
 #else
             ret = (mkdir(cur.c_str(), S_IRWXU|S_IRWXG|S_IRWXO) == 0);
@@ -898,7 +898,7 @@ std::string getProcessID()
 {
     std::string pid = "0";
     char buf[260] = {0};
-#ifdef WIN32
+#ifdef _WIN32
     DWORD winPID = GetCurrentProcessId();
     sprintf(buf, "%06u", winPID);
     pid = buf;
@@ -914,7 +914,7 @@ std::string getProcessName()
 {
     std::string name = "process";
     char buf[260] = {0};
-#ifdef WIN32
+#ifdef _WIN32
     if (GetModuleFileNameA(NULL, buf, 259) > 0)
     {
         name = buf;
@@ -966,7 +966,7 @@ std::string getProcessName()
 //////////////////////////////////////////////////////////////////////////
 LockHelper::LockHelper()
 {
-#ifdef WIN32
+#ifdef _WIN32
     InitializeCriticalSection(&_crit);
 #else
     //_crit = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
@@ -980,7 +980,7 @@ LockHelper::LockHelper()
 }
 LockHelper::~LockHelper()
 {
-#ifdef WIN32
+#ifdef _WIN32
     DeleteCriticalSection(&_crit);
 #else
     pthread_mutex_destroy(&_crit);
@@ -989,7 +989,7 @@ LockHelper::~LockHelper()
 
 void LockHelper::lock()
 {
-#ifdef WIN32
+#ifdef _WIN32
     EnterCriticalSection(&_crit);
 #else
     pthread_mutex_lock(&_crit);
@@ -997,7 +997,7 @@ void LockHelper::lock()
 }
 void LockHelper::unLock()
 {
-#ifdef WIN32
+#ifdef _WIN32
     LeaveCriticalSection(&_crit);
 #else
     pthread_mutex_unlock(&_crit);
@@ -1008,7 +1008,7 @@ void LockHelper::unLock()
 //////////////////////////////////////////////////////////////////////////
 SemHelper::SemHelper()
 {
-#ifdef WIN32
+#ifdef _WIN32
     _hSem = NULL;
 #elif defined(__APPLE__)
     _semid = NULL;
@@ -1019,7 +1019,7 @@ SemHelper::SemHelper()
 }
 SemHelper::~SemHelper()
 {
-#ifdef WIN32
+#ifdef _WIN32
     if (_hSem != NULL)
     {
         CloseHandle(_hSem);
@@ -1047,7 +1047,7 @@ bool SemHelper::create(int initcount)
     {
         initcount = 0;
     }
-#ifdef WIN32
+#ifdef _WIN32
     if (initcount > 64)
     {
         return false;
@@ -1075,7 +1075,7 @@ bool SemHelper::create(int initcount)
 }
 bool SemHelper::wait(int timeout)
 {
-#ifdef WIN32
+#ifdef _WIN32
     if (timeout <= 0)
     {
         timeout = INFINITE;
@@ -1131,7 +1131,7 @@ bool SemHelper::wait(int timeout)
 
 bool SemHelper::post()
 {
-#ifdef WIN32
+#ifdef _WIN32
     return ReleaseSemaphore(_hSem, 1, NULL) ? true : false;
 #elif defined(__APPLE__)
     return dispatch_semaphore_signal(_semid) == 0;
@@ -1146,7 +1146,7 @@ bool SemHelper::post()
 //////////////////////////////////////////////////////////////////////////
 bool ThreadHelper::start()
 {
-#ifdef WIN32
+#ifdef _WIN32
     unsigned long long ret = _beginthreadex(NULL, 0, threadProc, (void *) this, 0, NULL);
 
     if (ret == -1 || ret == 0)
@@ -1168,7 +1168,7 @@ bool ThreadHelper::start()
 
 bool ThreadHelper::wait()
 {
-#ifdef WIN32
+#ifdef _WIN32
     if (WaitForSingleObject((HANDLE)_hThreadID, INFINITE) != WAIT_OBJECT_0)
     {
         return false;
@@ -1242,7 +1242,7 @@ LogData * LogerManager::makeLogData(LoggerId id, int level)
         pLog->_typeval = 0;
         pLog->_threadID = 0;
         pLog->_contentLen = 0;
-#ifdef WIN32
+#ifdef _WIN32
         FILETIME ft;
         GetSystemTimeAsFileTime(&ft);
         unsigned long long now = ft.dwHighDateTime;
@@ -1259,7 +1259,7 @@ LogData * LogerManager::makeLogData(LoggerId id, int level)
         pLog->_time = tm.tv_sec;
         pLog->_precise = tm.tv_usec / 1000;
 #endif
-#ifdef WIN32
+#ifdef _WIN32
         pLog->_threadID = GetCurrentThreadId();
 #elif defined(__APPLE__)
         unsigned long long tid = 0;
@@ -1273,13 +1273,13 @@ LogData * LogerManager::makeLogData(LoggerId id, int level)
     //format log
     if (true)
     {
-#ifdef WIN32
+#ifdef _WIN32
         static __declspec(thread) tm g_tt = { 0 };
         static __declspec(thread) time_t g_curDayTime =  0 ;
 #else
         static __thread tm g_tt = { 0 };
         static __thread time_t g_curDayTime = 0;
-#endif // WIN32
+#endif // _WIN32
         if (pLog->_time < g_curDayTime || pLog->_time >= g_curDayTime + 24*3600)
         {
             g_tt = timeToTm(pLog->_time);
@@ -1341,21 +1341,21 @@ void LogerManager::freeLogData(LogData * log)
 void LogerManager::showColorText(const char *text, int level)
 {
 
-#if defined(WIN32) && defined(LOG4Z_OEM_CONSOLE)
+#if defined(_WIN32) && defined(LOG4Z_OEM_CONSOLE)
     char oem[LOG4Z_LOG_BUF_SIZE] = { 0 };
     CharToOemBuffA(text, oem, LOG4Z_LOG_BUF_SIZE);
 #endif
 
     if (level <= LOG_LEVEL_DEBUG || level > LOG_LEVEL_FATAL)
     {
-#if defined(WIN32) && defined(LOG4Z_OEM_CONSOLE)
+#if defined(_WIN32) && defined(LOG4Z_OEM_CONSOLE)
         printf("%s", oem);
 #else
         printf("%s", text);
 #endif
         return;
     }
-#ifndef WIN32
+#ifndef _WIN32
     printf("%s%s\e[0m", LOG_COLOR[level], text);
 #else
     AutoLock l(_scLock);
@@ -1610,7 +1610,7 @@ bool LogerManager::pushLog(LogData * pLog, const char * file, int line)
 
     if (LOG4Z_ALL_DEBUGOUTPUT_DISPLAY && LOG4Z_ALL_SYNCHRONOUS_OUTPUT)
     {
-#ifdef WIN32
+#ifdef _WIN32
         OutputDebugStringA(pLog->_content);
 #endif
     }
@@ -2004,7 +2004,7 @@ void LogerManager::run()
             }
             if (LOG4Z_ALL_DEBUGOUTPUT_DISPLAY )
             {
-#ifdef WIN32
+#ifdef _WIN32
                 OutputDebugStringA(pLog->_content);
 #endif
             }

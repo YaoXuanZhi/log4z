@@ -192,7 +192,7 @@
 #include <math.h>
 #include <cmath>
 #include <stdlib.h>
-#ifdef WIN32
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
@@ -225,7 +225,7 @@ const char*const LOG4Z_MAIN_LOGGER_KEY = "Main";
 #define LOG4Z_FORMAT_INPUT_ENABLE
 #endif
 
-#ifndef WIN32
+#ifndef _WIN32
 #define LOG4Z_FORMAT_INPUT_ENABLE
 #endif
 
@@ -421,7 +421,7 @@ do{\
 
 //! format input log.
 #ifdef LOG4Z_FORMAT_INPUT_ENABLE
-#ifdef WIN32
+#ifdef _WIN32
 #define LOG_FORMAT(id, level, file, line, logformat, ...) \
 do{ \
     if (zsummer::log4z::ILog4zManager::getPtr()->prePushLog(id,level)) \
@@ -486,7 +486,7 @@ _ZSUMMER_BEGIN
 _ZSUMMER_LOG4Z_BEGIN
 
 //! optimze from std::stringstream to Log4zStream
-#ifdef WIN32
+#ifdef _WIN32
 #pragma warning(push)
 #pragma warning(disable:4996)
 #endif
@@ -922,7 +922,7 @@ inline Log4zStream & zsummer::log4z::Log4zStream::writeString(const char * t, si
 
 
 
-#ifdef WIN32
+#ifdef _WIN32
 #pragma warning(pop)
 #endif
 
