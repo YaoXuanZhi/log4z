@@ -216,14 +216,14 @@ void ColoredPrintf(ENUM_LEVEL_COLOR color, const char* fmt, ...)
     // We need to flush the stream buffers into the console before each
     // SetConsoleTextAttribute call lest it affect the text that is already
     // printed but has not yet reached the console.
-    fflush(stdout);
+    //fflush(stdout);
     //SetConsoleTextAttribute(stdout_handle,
     //    GetColorAttribute(color) | FOREGROUND_INTENSITY);
     SetConsoleTextAttribute(stdout_handle,
         GetColorAttribute(color));
     vprintf(fmt, args);
 
-    fflush(stdout);
+    //fflush(stdout);
     // Restores the text color.
     SetConsoleTextAttribute(stdout_handle, old_color_attrs);
 #else
@@ -515,7 +515,7 @@ public:
     virtual bool start();
     virtual bool stop();
     virtual bool prePushLog(LoggerId id, int level);
-    virtual bool pushLog(LogData * pLog, const char * file, int line);
+    virtual bool pushLog(LogData * pLog);
     //! 查找ID
     virtual LoggerId findLogger(const char*  key);
     bool hotChange(LoggerId id, LogDataType ldt, int num, const std::string & text);
@@ -539,7 +539,8 @@ public:
     virtual unsigned long long getStatusTotalPopQueue() { return _ullStatusTotalPopLog; }
     virtual unsigned int getStatusActiveLoggers();
 protected:
-    virtual LogData * makeLogData(LoggerId id, int level);
+    virtual LogData * makeLogData(LoggerId id, int level, const char* log = NULL, const char * file = NULL, int line = 0);
+
     virtual void freeLogData(LogData * log);
     void showColorText(const char *text, int level = LOG_LEVEL_DEBUG);
     bool onHotChange(LoggerId id, LogDataType ldt, int num, const std::string & text);
@@ -1320,8 +1321,7 @@ LogerManager::~LogerManager()
     stop();
 }
 
-
-LogData * LogerManager::makeLogData(LoggerId id, int level)
+LogData * LogerManager::makeLogData(LoggerId id, int level, const char* log, const char * file, int line)
 {
     LogData * pLog = NULL;
     if (true)
@@ -1380,6 +1380,10 @@ LogData * LogerManager::makeLogData(LoggerId id, int level)
     //format log
     if (true)
     {
+        char szLevelBefore[256] = {0};
+        char szLevelStr[10] = {0};
+        char szLevelAfter[LOG4Z_LOG_BUF_SIZE] = {0};
+
 #ifdef _WIN32
         static __declspec(thread) tm g_tt = { 0 };
         static __declspec(thread) time_t g_curDayTime =  0 ;
@@ -1396,41 +1400,86 @@ LogData * LogerManager::makeLogData(LoggerId id, int level)
             g_curDayTime = mktime(&g_tt);
         }
         time_t sec = pLog->_time - g_curDayTime;
-        Log4zStream ls(pLog->_content, LOG4Z_LOG_BUF_SIZE);
-        ls.writeChar('[');
-        ls.writeULongLong(g_tt.tm_year + 1900, 4);
-        ls.writeChar('-');
-        ls.writeULongLong(g_tt.tm_mon + 1, 2);
-        ls.writeChar('-');
-        ls.writeULongLong(g_tt.tm_mday, 2);
-        ls.writeChar(' ');
-        ls.writeULongLong(sec/3600, 2);
-        ls.writeChar(':');
-        ls.writeULongLong((sec % 3600)/60 , 2);
-        ls.writeChar(':');
-        ls.writeULongLong(sec % 60, 2);
-        ls.writeChar('.');
-        ls.writeULongLong(pLog->_precise, 3);
-        ls.writeChar(']');
 
+        //日期
+        Log4zStream lsLevelBefore(szLevelBefore, 256);
+        lsLevelBefore.writeChar('[');
+        lsLevelBefore.writeULongLong(g_tt.tm_year + 1900, 4);
+        lsLevelBefore.writeChar('-');
+        lsLevelBefore.writeULongLong(g_tt.tm_mon + 1, 2);
+        lsLevelBefore.writeChar('-');
+        lsLevelBefore.writeULongLong(g_tt.tm_mday, 2);
+        lsLevelBefore.writeChar(' ');
+        lsLevelBefore.writeULongLong(sec/3600, 2);
+        lsLevelBefore.writeChar(':');
+        lsLevelBefore.writeULongLong((sec % 3600)/60 , 2);
+        lsLevelBefore.writeChar(':');
+        lsLevelBefore.writeULongLong(sec % 60, 2);
+        lsLevelBefore.writeChar('.');
+        lsLevelBefore.writeULongLong(pLog->_precise, 3);
+        lsLevelBefore.writeChar(']');
+
+        //线程Id
         if (_loggers[pLog->_id]._threadId)
         {
-            ls.writeChar(' ');
-            ls.writeChar('[');
-            ls.writeULongLong(pLog->_threadID, 4);
-            ls.writeChar(']');
+            lsLevelBefore.writeChar(' ');
+            lsLevelBefore.writeChar('[');
+            lsLevelBefore.writeULongLong(pLog->_threadID, 4);
+            lsLevelBefore.writeChar(']');
         }
 
-        ls.writeChar(' ');
-        ls.writeChar('<');
-        ls.writeString(LOG_STRING[pLog->_level], LOG_STRING_LEN[pLog->_level]);
-        ls.writeChar('>');
+        //日志等级
+        Log4zStream lsLevelStr(szLevelStr, 10);
+        lsLevelStr.writeChar(' ');
+        lsLevelStr.writeChar('<');
+        lsLevelStr.writeString(LOG_STRING[pLog->_level], LOG_STRING_LEN[pLog->_level]);
+        lsLevelStr.writeChar('>');
 
-        ls.writeChar(' ');
+        //真正的输出日志
+        Log4zStream lsLevelAfter(szLevelAfter, LOG4Z_LOG_BUF_SIZE);
+        lsLevelAfter.writeChar(' ');
+        if (log)
+            lsLevelAfter.writeString(log);
+
+        //文件名和代码行
+        if (_loggers[pLog->_id]._fileLine && file)
+        {
+            const char * pNameEnd = file + strlen(file);
+            const char * pNameBegin = pNameEnd;
+            do
+            {
+                if (*pNameBegin == '\\' || *pNameBegin == '/') { pNameBegin++; break; }
+                if (pNameBegin == file) { break; }
+                pNameBegin--;
+            } while (true);
+
+            lsLevelAfter.writeChar(' ');
+            lsLevelAfter.writeString(pNameBegin, pNameEnd - pNameBegin);
+            lsLevelAfter.writeChar(':');
+            lsLevelAfter.writeULongLong((unsigned long long)line);
+        }
+
+        //追加换行符
+        lsLevelAfter.writeChar('\r');
+        lsLevelAfter.writeChar('\n');
+        lsLevelAfter.writeChar('\0');
+
+        // 着色输出
+        ColoredPrintf(COLOR_LEVEL_DEFAULT, szLevelBefore);
+        ColoredPrintf(LEVEL_MAP[level], szLevelStr);
+        ColoredPrintf(COLOR_LEVEL_DEFAULT, szLevelAfter);
+
+        //拼接日志
+        Log4zStream ls(pLog->_content, LOG4Z_LOG_BUF_SIZE);
+        ls.writeString(szLevelBefore, lsLevelBefore.getCurrentLen());
+        ls.writeString(szLevelStr, lsLevelStr.getCurrentLen());
+        ls.writeString(szLevelAfter, lsLevelAfter.getCurrentLen());
+
         pLog->_contentLen = ls.getCurrentLen();
     }
     return pLog;
 }
+
 void LogerManager::freeLogData(LogData * log)
 {
     if (_freeLogDatas.size() < 200)
@@ -1676,7 +1725,8 @@ bool LogerManager::prePushLog(LoggerId id, int level)
     }
     return true;
 }
-bool LogerManager::pushLog(LogData * pLog, const char * file, int line)
+
+bool LogerManager::pushLog(LogData * pLog)
 {
     // discard log
     if (pLog->_id < 0 || pLog->_id > _lastId || !_runing || !_loggers[pLog->_id]._enable)
@@ -1690,35 +1740,6 @@ bool LogerManager::pushLog(LogData * pLog, const char * file, int line)
     {
         freeLogData(pLog);
         return false;
-    }
-    if (_loggers[pLog->_id]._fileLine && file)
-    {
-        const char * pNameEnd = file + strlen(file);
-        const char * pNameBegin = pNameEnd;
-        do
-        {
-            if (*pNameBegin == '\\' || *pNameBegin == '/') { pNameBegin++; break; }
-            if (pNameBegin == file) { break; }
-            pNameBegin--;
-        } while (true);
-        zsummer::log4z::Log4zStream ss(pLog->_content + pLog->_contentLen, LOG4Z_LOG_BUF_SIZE - pLog->_contentLen); 
-        ss.writeChar(' ');
-        ss.writeString(pNameBegin, pNameEnd - pNameBegin);
-        ss.writeChar(':');
-        ss.writeULongLong((unsigned long long)line);
-        pLog->_contentLen += ss.getCurrentLen();
-    }
-
-    if (pLog->_contentLen +3 > LOG4Z_LOG_BUF_SIZE ) pLog->_contentLen = LOG4Z_LOG_BUF_SIZE - 3;
-    pLog->_content[pLog->_contentLen + 0] = '\r';
-    pLog->_content[pLog->_contentLen + 1] = '\n';
-    pLog->_content[pLog->_contentLen + 2] = '\0';
-    pLog->_contentLen += 2;
-
-
-    if (_loggers[pLog->_id]._display && LOG4Z_ALL_SYNCHRONOUS_OUTPUT)
-    {
-        showColorText(pLog->_content, pLog->_level);
     }
 
     if (LOG4Z_ALL_DEBUGOUTPUT_DISPLAY && LOG4Z_ALL_SYNCHRONOUS_OUTPUT)
@@ -2064,12 +2085,12 @@ void LogerManager::run()
     {
         if (_loggers[i]._enable)
         {
-            LOGA("logger id=" << i
-                << " key=" << _loggers[i]._key
-                << " name=" << _loggers[i]._name
-                << " path=" << _loggers[i]._path
-                << " level=" << _loggers[i]._level
-                << " display=" << _loggers[i]._display);
+            //LOGA("logger id=" << i
+            //    << " key=" << _loggers[i]._key
+            //    << " name=" << _loggers[i]._name
+            //    << " path=" << _loggers[i]._path
+            //    << " level=" << _loggers[i]._level
+            //    << " display=" << _loggers[i]._display);
         }
     }
 
