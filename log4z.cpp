@@ -87,6 +87,8 @@
 _ZSUMMER_BEGIN
 _ZSUMMER_LOG4Z_BEGIN
 
+#define GTEST_COLORPRINTF 1
+
 static const char *const LOG_STRING[]=
 {
     "TRACE",
@@ -108,6 +110,7 @@ static const size_t LOG_STRING_LEN[] =
     sizeof("FATAL") - 1,
 };
 
+#ifndef GTEST_COLORPRINTF
 #ifdef _WIN32
 const static WORD LOG_COLOR[LOG_LEVEL_FATAL + 1] = {
     0,
@@ -127,6 +130,110 @@ const static char LOG_COLOR[LOG_LEVEL_FATAL + 1][50] = {
     "\e[31m", //red
     "\e[32m", //green
     "\e[35m" };
+#endif
+#else
+enum ENUM_LEVEL_COLOR {
+  COLOR_LEVEL_DEFAULT,
+  COLOR_LEVEL_RED,
+  COLOR_LEVEL_GREEN,
+  COLOR_LEVEL_YELLOW,
+  COLOR_LEVEL_BLUE,
+  COLOR_LEVEL_PURPLE,
+  COLOR_LEVEL_WHITE,
+  COLOR_LEVEL_CYAN,
+};
+
+const static ENUM_LEVEL_COLOR LEVEL_MAP[LOG_LEVEL_FATAL + 1] = {
+    COLOR_LEVEL_DEFAULT,
+    COLOR_LEVEL_DEFAULT,
+    COLOR_LEVEL_CYAN,
+    COLOR_LEVEL_YELLOW,
+    COLOR_LEVEL_RED,
+    COLOR_LEVEL_GREEN,
+    COLOR_LEVEL_PURPLE,
+};
+
+#ifdef _WIN32
+// Returns the character attribute for the given color.
+WORD GetColorAttribute(ENUM_LEVEL_COLOR color) {
+  switch (color) {
+    case COLOR_LEVEL_RED:    return FOREGROUND_RED;
+    case COLOR_LEVEL_GREEN:  return FOREGROUND_GREEN;
+    case COLOR_LEVEL_YELLOW: return FOREGROUND_RED | FOREGROUND_GREEN;
+    case COLOR_LEVEL_BLUE:   return FOREGROUND_BLUE;
+    case COLOR_LEVEL_PURPLE: return FOREGROUND_BLUE | FOREGROUND_RED ;
+    case COLOR_LEVEL_WHITE:  return FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE ;
+    case COLOR_LEVEL_CYAN:   return FOREGROUND_GREEN | FOREGROUND_BLUE ;
+    default:           return 0;
+  }
+}
+
+#else
+// Returns the ANSI color code for the given color.  COLOR_DEFAULT is
+// an invalid input.
+const char* GetAnsiColorCode(ENUM_LEVEL_COLOR color) {
+    switch (color) {
+    case COLOR_LEVEL_RED:     return "1";
+    case COLOR_LEVEL_GREEN:   return "2";
+    case COLOR_LEVEL_YELLOW:  return "3";
+    case COLOR_LEVEL_BLUE:    return "4";
+    case COLOR_LEVEL_PURPLE:  return "5";
+    case COLOR_LEVEL_WHITE:   return "6";
+    case COLOR_LEVEL_CYAN:    return "7";
+    default:            return NULL;
+  };
+}
+
+#endif  // _WIN32
+
+
+// Helpers for printing colored strings to stdout. Note that on Windows, we
+// cannot simply emit special characters and have the terminal change colors.
+// This routine must actually emit the characters rather than return a string
+// that would be colored when printed, as can be done on Linux.
+void ColoredPrintf(ENUM_LEVEL_COLOR color, const char* fmt, ...) 
+{
+    va_list args;
+    va_start(args, fmt);
+
+    const bool use_color = color != COLOR_LEVEL_DEFAULT;
+    // The '!= 0' comparison is necessary to satisfy MSVC 7.1.
+
+    if (!use_color) {
+        vprintf(fmt, args);
+        va_end(args);
+        return;
+    }
+
+#if _WIN32
+    const HANDLE stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    // Gets the current text color.
+    CONSOLE_SCREEN_BUFFER_INFO buffer_info;
+    GetConsoleScreenBufferInfo(stdout_handle, &buffer_info);
+    const WORD old_color_attrs = buffer_info.wAttributes;
+
+    // We need to flush the stream buffers into the console before each
+    // SetConsoleTextAttribute call lest it affect the text that is already
+    // printed but has not yet reached the console.
+    fflush(stdout);
+    //SetConsoleTextAttribute(stdout_handle,
+    //    GetColorAttribute(color) | FOREGROUND_INTENSITY);
+    SetConsoleTextAttribute(stdout_handle,
+        GetColorAttribute(color));
+    vprintf(fmt, args);
+
+    fflush(stdout);
+    // Restores the text color.
+    SetConsoleTextAttribute(stdout_handle, old_color_attrs);
+#else
+    printf("\033[0;3%sm", GetAnsiColorCode(color));
+    vprintf(fmt, args);
+    printf("\033[m");  // Resets the terminal to default.
+#endif  // GTEST_OS_WINDOWS && !GTEST_OS_WINDOWS_MOBILE
+    va_end(args);
+}
+
 #endif
 
 //////////////////////////////////////////////////////////////////////////
@@ -1340,7 +1447,9 @@ void LogerManager::freeLogData(LogData * log)
 
 void LogerManager::showColorText(const char *text, int level)
 {
-
+#ifdef GTEST_COLORPRINTF
+    ColoredPrintf(LEVEL_MAP[level], text);
+#else
 #if defined(_WIN32) && defined(LOG4Z_OEM_CONSOLE)
     char oem[LOG4Z_LOG_BUF_SIZE] = { 0 };
     CharToOemBuffA(text, oem, LOG4Z_LOG_BUF_SIZE);
@@ -1369,13 +1478,17 @@ void LogerManager::showColorText(const char *text, int level)
     else
     {
         SetConsoleTextAttribute(hStd, LOG_COLOR[level]);
+        fflush(stdout);
 #ifdef LOG4Z_OEM_CONSOLE
-		printf("%s", oem);
+        printf("%s", oem);
 #else
-		printf("%s", text);
+        printf("%s", text);
 #endif
-		SetConsoleTextAttribute(hStd, oldInfo.wAttributes);
+        SetConsoleTextAttribute(hStd, oldInfo.wAttributes);
+        fflush(stdout);
     }
+#endif
+
 #endif
     return;
 }
