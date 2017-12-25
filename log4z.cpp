@@ -89,23 +89,23 @@ _ZSUMMER_LOG4Z_BEGIN
 
 static const char *const LOG_STRING[]=
 {
-    "LOG_TRACE",
-    "LOG_DEBUG",
-    "LOG_INFO ",
-    "LOG_WARN ",
-    "LOG_ERROR",
-    "LOG_ALARM",
-    "LOG_FATAL",
+    "TRACE",
+    "DEBUG",
+    "INFO",
+    "WARN",
+    "ERROR",
+    "ALARM",
+    "FATAL",
 };
 static const size_t LOG_STRING_LEN[] =
 {
-    sizeof("LOG_TRACE") - 1,
-    sizeof("LOG_DEBUG") - 1,
-    sizeof("LOG_INFO") - 1,
-    sizeof("LOG_WARN") - 1,
-    sizeof("LOG_ERROR") - 1,
-    sizeof("LOG_ALARM") - 1,
-    sizeof("LOG_FATAL") - 1,
+    sizeof("TRACE") - 1,
+    sizeof("DEBUG") - 1,
+    sizeof("INFO") - 1,
+    sizeof("WARN") - 1,
+    sizeof("ERROR") - 1,
+    sizeof("ALARM") - 1,
+    sizeof("FATAL") - 1,
 };
 
 #ifdef WIN32
@@ -1290,6 +1290,7 @@ LogData * LogerManager::makeLogData(LoggerId id, int level)
         }
         time_t sec = pLog->_time - g_curDayTime;
         Log4zStream ls(pLog->_content, LOG4Z_LOG_BUF_SIZE);
+        ls.writeChar('[');
         ls.writeULongLong(g_tt.tm_year + 1900, 4);
         ls.writeChar('-');
         ls.writeULongLong(g_tt.tm_mon + 1, 2);
@@ -1303,6 +1304,7 @@ LogData * LogerManager::makeLogData(LoggerId id, int level)
         ls.writeULongLong(sec % 60, 2);
         ls.writeChar('.');
         ls.writeULongLong(pLog->_precise, 3);
+        ls.writeChar(']');
 
         if (_loggers[pLog->_id]._threadId)
         {
@@ -1313,7 +1315,10 @@ LogData * LogerManager::makeLogData(LoggerId id, int level)
         }
 
         ls.writeChar(' ');
+        ls.writeChar('<');
         ls.writeString(LOG_STRING[pLog->_level], LOG_STRING_LEN[pLog->_level]);
+        ls.writeChar('>');
+
         ls.writeChar(' ');
         pLog->_contentLen = ls.getCurrentLen();
     }
