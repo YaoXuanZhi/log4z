@@ -343,7 +343,7 @@ public:
     //pre-check the log filter. if filter out return false. 
     virtual bool prePushLog(LoggerId id, int level) = 0;
     //! Push log, thread safe.
-    virtual bool pushLog(LogData * pLog, const char * file = NULL, int line = 0) = 0;
+    virtual bool pushLog(LogData * pLog) = 0;
 
     //! set logger's attribute, thread safe.
     virtual bool enableLogger(LoggerId id, bool enable) = 0; // immediately when enable, and queue up when disable. 
@@ -371,7 +371,8 @@ public:
     virtual unsigned long long getStatusTotalPopQueue() = 0;
     virtual unsigned int getStatusActiveLoggers() = 0;
 
-    virtual LogData * makeLogData(LoggerId id, int level) = 0;
+    // 在这里面拼接日志并彩屏输出
+    virtual LogData * makeLogData(LoggerId id, int level, const char* log = NULL, const char * file = NULL, int line = 0) = 0;
     virtual void freeLogData(LogData * log) = 0;
 };
 
@@ -395,14 +396,10 @@ _ZSUMMER_END
 do{\
     if (zsummer::log4z::ILog4zManager::getPtr()->prePushLog(id,level)) \
     {\
-        zsummer::log4z::LogData * __pLog = zsummer::log4z::ILog4zManager::getPtr()->makeLogData(id, level); \
-        zsummer::log4z::Log4zStream __ss(__pLog->_content + __pLog->_contentLen, LOG4Z_LOG_BUF_SIZE - __pLog->_contentLen);\
-        __ss << log;\
-        __pLog->_contentLen += __ss.getCurrentLen(); \
-        zsummer::log4z::ILog4zManager::getPtr()->pushLog(__pLog, file, line);\
+        zsummer::log4z::LogData * __pLog = zsummer::log4z::ILog4zManager::getPtr()->makeLogData(id, level, log, file, line); \
+        zsummer::log4z::ILog4zManager::getPtr()->pushLog(__pLog);\
     }\
 } while (0)
-
 
 //! fast macro
 #define LOG_TRACE(id, log) LOG_STREAM(id, LOG_LEVEL_TRACE, __FILE__, __LINE__, log)
