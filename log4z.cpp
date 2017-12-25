@@ -329,6 +329,7 @@ enum LogDataType
     LDT_SET_LOGGER_NAME,
     LDT_SET_LOGGER_PATH,
     LDT_SET_LOGGER_LEVEL,
+    LDT_SET_LOGGER_THREADID,
     LDT_SET_LOGGER_FILELINE,
     LDT_SET_LOGGER_DISPLAY,
     LDT_SET_LOGGER_OUTFILE,
@@ -354,6 +355,7 @@ struct LoggerInfo
     bool _monthdir;        //create directory per month 
     unsigned int _limitsize; //limit file's size, unit Million byte.
     bool _enable;        //logger is enable 
+    bool _threadId;        //enable/disable the log's suffix.(threadId)
     bool _fileLine;        //enable/disable the log's suffix.(file name:line number)
 	time_t _logReserveTime; //log file reserve time. unit is time second.
     //! runtime info
@@ -414,6 +416,7 @@ public:
     virtual bool setLoggerName(LoggerId id, const char * name);
     virtual bool setLoggerPath(LoggerId id, const char * path);
     virtual bool setLoggerLevel(LoggerId id, int nLevel);
+    virtual bool setLoggerThreadId(LoggerId id, bool enable);
     virtual bool setLoggerFileLine(LoggerId id, bool enable);
     virtual bool setLoggerDisplay(LoggerId id, bool enable);
     virtual bool setLoggerOutFile(LoggerId id, bool enable);
@@ -755,6 +758,18 @@ static bool parseConfigLine(const std::string& line, int curLineNum, std::string
     else if (kv.first == "limitsize")
     {
         iter->second._limitsize = atoi(kv.second.c_str());
+    }
+    //! display log in threadid
+    else if (kv.first == "threadid")
+    {
+        if (kv.second == "false" || kv.second == "0")
+        {
+            iter->second._threadId = false;
+        }
+        else
+        {
+            iter->second._threadId = true;
+        }
     }
     //! display log in file line
     else if (kv.first == "fileline")
@@ -1288,10 +1303,14 @@ LogData * LogerManager::makeLogData(LoggerId id, int level)
         ls.writeULongLong(sec % 60, 2);
         ls.writeChar('.');
         ls.writeULongLong(pLog->_precise, 3);
-        ls.writeChar(' ');
-        ls.writeChar('[');
-        ls.writeULongLong(pLog->_threadID, 4);
-        ls.writeChar(']');
+
+        if (_loggers[pLog->_id]._threadId)
+        {
+            ls.writeChar(' ');
+            ls.writeChar('[');
+            ls.writeULongLong(pLog->_threadID, 4);
+            ls.writeChar(']');
+        }
 
         ls.writeChar(' ');
         ls.writeString(LOG_STRING[pLog->_level], LOG_STRING_LEN[pLog->_level]);
@@ -1658,6 +1677,7 @@ bool LogerManager::onHotChange(LoggerId id, LogDataType ldt, int num, const std:
     else if (ldt == LDT_SET_LOGGER_NAME) logger._name = text;
     else if (ldt == LDT_SET_LOGGER_PATH) logger._path = text;
     else if (ldt == LDT_SET_LOGGER_LEVEL) logger._level = num;
+    else if (ldt == LDT_SET_LOGGER_THREADID) logger._threadId = num != 0;
     else if (ldt == LDT_SET_LOGGER_FILELINE) logger._fileLine = num != 0;
     else if (ldt == LDT_SET_LOGGER_DISPLAY) logger._display = num != 0;
     else if (ldt == LDT_SET_LOGGER_OUTFILE) logger._outfile = num != 0;
@@ -1690,6 +1710,7 @@ bool LogerManager::setLoggerLevel(LoggerId id, int level)
 bool LogerManager::setLoggerDisplay(LoggerId id, bool enable) { return hotChange(id, LDT_SET_LOGGER_DISPLAY, enable, ""); }
 bool LogerManager::setLoggerOutFile(LoggerId id, bool enable) { return hotChange(id, LDT_SET_LOGGER_OUTFILE, enable, ""); }
 bool LogerManager::setLoggerMonthdir(LoggerId id, bool enable) { return hotChange(id, LDT_SET_LOGGER_MONTHDIR, enable, ""); }
+bool LogerManager::setLoggerThreadId(LoggerId id, bool enable) { return hotChange(id, LDT_SET_LOGGER_THREADID, enable, ""); }
 bool LogerManager::setLoggerFileLine(LoggerId id, bool enable) { return hotChange(id, LDT_SET_LOGGER_FILELINE, enable, ""); }
 bool LogerManager::setLoggerReserveTime(LoggerId id, time_t sec) { return hotChange(id, LDT_SET_LOGGER_RESERVETIME, (int)sec, ""); }
 bool LogerManager::setLoggerLimitsize(LoggerId id, unsigned int limitsize)

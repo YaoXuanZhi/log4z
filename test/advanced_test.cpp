@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
     ILog4zManager::getRef().setLoggerLevel(logid_dynamic, LOG_LEVEL_DEBUG);
     ILog4zManager::getRef().setLoggerMonthdir(logid_dynamic, true);
     ILog4zManager::getRef().setLoggerFileLine(LOG4Z_MAIN_LOGGER_ID, false);
+    ILog4zManager::getRef().setLoggerThreadId(LOG4Z_MAIN_LOGGER_ID, true);
     ILog4zManager::getRef().setLoggerName(LOG4Z_MAIN_LOGGER_ID, "main");
     ILog4zManager::getRef().setLoggerPath(LOG4Z_MAIN_LOGGER_ID, "./");
     ILog4zManager::getRef().setLoggerLimitsize(logid_dynamic, 1);

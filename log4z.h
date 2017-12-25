@@ -346,6 +346,7 @@ public:
     virtual bool setLoggerName(LoggerId id, const char * name) = 0;
     virtual bool setLoggerPath(LoggerId id, const char * path) = 0;
     virtual bool setLoggerLevel(LoggerId id, int nLevel) = 0; // immediately when enable, and queue up when disable. 
+    virtual bool setLoggerThreadId(LoggerId id, bool enable) = 0;
     virtual bool setLoggerFileLine(LoggerId id, bool enable) = 0;
     virtual bool setLoggerDisplay(LoggerId id, bool enable) = 0;
     virtual bool setLoggerOutFile(LoggerId id, bool enable) = 0;
