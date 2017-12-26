@@ -252,6 +252,12 @@ enum ENUM_LOG_LEVEL
 const int LOG4Z_LOGGER_MAX = 20;
 //! the max log content length.
 const int LOG4Z_LOG_BUF_SIZE = 1024 * 8;
+//! the max levelbefore content length.
+const int LOG4Z_LEVELBEFORE_SIZE = 128;
+//! the max levelstr content length.
+const int LOG4Z_LEVELSTR_SIZE = 10;
+//! the max levelafter content length.
+const int LOG4Z_LEVELAFTER_SIZE = LOG4Z_LOG_BUF_SIZE - LOG4Z_LEVELBEFORE_SIZE - LOG4Z_LEVELSTR_SIZE;
 //! the max stl container depth.
 const int LOG4Z_LOG_CONTAINER_DEPTH = 5;
 //! the log queue length limit size.
@@ -394,8 +400,8 @@ _ZSUMMER_END
 do{\
     if (zsummer::log4z::ILog4zManager::getPtr()->prePushLog(id,level)) \
     {\
-        char szBuff[LOG4Z_LOG_BUF_SIZE] = {0};\
-        zsummer::log4z::Log4zStream __ss(szBuff, LOG4Z_LOG_BUF_SIZE);\
+        char szBuff[LOG4Z_LEVELAFTER_SIZE] = {0};\
+        zsummer::log4z::Log4zStream __ss(szBuff, LOG4Z_LEVELAFTER_SIZE);\
         __ss << log;\
         zsummer::log4z::LogData * __pLog = zsummer::log4z::ILog4zManager::getPtr()->makeLogData(id, level, true, szBuff, file, line); \
         zsummer::log4z::ILog4zManager::getPtr()->pushLog(__pLog);\
