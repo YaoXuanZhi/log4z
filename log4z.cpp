@@ -1415,14 +1415,14 @@ LogData * LogerManager::makeLogData(LoggerId id, int level, const char* log, con
         lsLevelBefore.writeULongLong((sec % 3600)/60 , 2);
         lsLevelBefore.writeChar(':');
         lsLevelBefore.writeULongLong(sec % 60, 2);
-        lsLevelBefore.writeChar('.');
-        lsLevelBefore.writeULongLong(pLog->_precise, 3);
+        //lsLevelBefore.writeChar('.');
+        //lsLevelBefore.writeULongLong(pLog->_precise, 3);
         lsLevelBefore.writeChar(']');
 
         //线程Id
         if (_loggers[pLog->_id]._threadId)
         {
-            lsLevelBefore.writeChar(' ');
+            //lsLevelBefore.writeChar(' ');
             lsLevelBefore.writeChar('[');
             lsLevelBefore.writeULongLong(pLog->_threadID, 4);
             lsLevelBefore.writeChar(']');
@@ -1430,14 +1430,14 @@ LogData * LogerManager::makeLogData(LoggerId id, int level, const char* log, con
 
         //日志等级
         Log4zStream lsLevelStr(szLevelStr, 10);
-        lsLevelStr.writeChar(' ');
+        //lsLevelStr.writeChar(' ');
         lsLevelStr.writeChar('<');
         lsLevelStr.writeString(LOG_STRING[pLog->_level], LOG_STRING_LEN[pLog->_level]);
         lsLevelStr.writeChar('>');
 
         //真正的输出日志
         Log4zStream lsLevelAfter(szLevelAfter, LOG4Z_LOG_BUF_SIZE);
-        lsLevelAfter.writeChar(' ');
+        //lsLevelAfter.writeChar(' ');
         if (log)
             lsLevelAfter.writeString(log);
 
@@ -1465,9 +1465,9 @@ LogData * LogerManager::makeLogData(LoggerId id, int level, const char* log, con
         lsLevelAfter.writeChar('\0');
 
         // 着色输出
-        ColoredPrintf(COLOR_LEVEL_DEFAULT, szLevelBefore);
-        ColoredPrintf(LEVEL_MAP[level], szLevelStr);
-        ColoredPrintf(COLOR_LEVEL_DEFAULT, szLevelAfter);
+        showColorText(szLevelBefore, LOG_LEVEL_TRACE);
+        showColorText(szLevelStr, level);
+        showColorText(szLevelAfter, LOG_LEVEL_TRACE);
 
         //拼接日志
         Log4zStream ls(pLog->_content, LOG4Z_LOG_BUF_SIZE);
@@ -1497,6 +1497,9 @@ void LogerManager::freeLogData(LogData * log)
 void LogerManager::showColorText(const char *text, int level)
 {
 #ifdef GTEST_COLORPRINTF
+#ifdef _WIN32
+    AutoLock l(_scLock);
+#endif
     ColoredPrintf(LEVEL_MAP[level], text);
 #else
 #if defined(_WIN32) && defined(LOG4Z_OEM_CONSOLE)
@@ -2085,12 +2088,12 @@ void LogerManager::run()
     {
         if (_loggers[i]._enable)
         {
-            //LOGA("logger id=" << i
-            //    << " key=" << _loggers[i]._key
-            //    << " name=" << _loggers[i]._name
-            //    << " path=" << _loggers[i]._path
-            //    << " level=" << _loggers[i]._level
-            //    << " display=" << _loggers[i]._display);
+            LOGA("logger id=" << i
+                << " key=" << _loggers[i]._key
+                << " name=" << _loggers[i]._name
+                << " path=" << _loggers[i]._path
+                << " level=" << _loggers[i]._level
+                << " display=" << _loggers[i]._display);
         }
     }
 

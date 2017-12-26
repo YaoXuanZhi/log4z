@@ -385,14 +385,15 @@ class Log4zBinary;
 _ZSUMMER_LOG4Z_END
 _ZSUMMER_END
 
-
-
 //! base macro.
 #define LOG_STREAM(id, level, file, line, log)\
 do{\
     if (zsummer::log4z::ILog4zManager::getPtr()->prePushLog(id,level)) \
     {\
-        zsummer::log4z::LogData * __pLog = zsummer::log4z::ILog4zManager::getPtr()->makeLogData(id, level, log, file, line); \
+        char szBuff[LOG4Z_LOG_BUF_SIZE] = {0};\
+        zsummer::log4z::Log4zStream __ss(szBuff, LOG4Z_LOG_BUF_SIZE);\
+        __ss << log;\
+        zsummer::log4z::LogData * __pLog = zsummer::log4z::ILog4zManager::getPtr()->makeLogData(id, level, szBuff, file, line); \
         zsummer::log4z::ILog4zManager::getPtr()->pushLog(__pLog);\
     }\
 } while (0)
