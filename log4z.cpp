@@ -1380,9 +1380,9 @@ LogData * LogerManager::makeLogData(LoggerId id, int level, bool isPrint, const 
     //format log
     if (true)
     {
-        char szLevelBefore[256] = {0};
-        char szLevelStr[10] = {0};
-        char szLevelAfter[LOG4Z_LOG_BUF_SIZE] = {0};
+        char szLevelBefore[LOG4Z_LEVELBEFORE_SIZE] = {0};
+        char szLevelStr[LOG4Z_LEVELSTR_SIZE] = {0};
+        char szLevelAfter[LOG4Z_LEVELAFTER_SIZE] = {0};
 
 #ifdef _WIN32
         static __declspec(thread) tm g_tt = { 0 };
@@ -1402,7 +1402,7 @@ LogData * LogerManager::makeLogData(LoggerId id, int level, bool isPrint, const 
         time_t sec = pLog->_time - g_curDayTime;
 
         //日期
-        Log4zStream lsLevelBefore(szLevelBefore, 256);
+        Log4zStream lsLevelBefore(szLevelBefore, LOG4Z_LEVELBEFORE_SIZE);
         lsLevelBefore.writeChar('[');
         lsLevelBefore.writeULongLong(g_tt.tm_year + 1900, 4);
         lsLevelBefore.writeChar('-');
@@ -1429,14 +1429,14 @@ LogData * LogerManager::makeLogData(LoggerId id, int level, bool isPrint, const 
         }
 
         //日志等级
-        Log4zStream lsLevelStr(szLevelStr, 10);
+        Log4zStream lsLevelStr(szLevelStr, LOG4Z_LEVELSTR_SIZE);
         //lsLevelStr.writeChar(' ');
         lsLevelStr.writeChar('<');
         lsLevelStr.writeString(LOG_STRING[pLog->_level], LOG_STRING_LEN[pLog->_level]);
         lsLevelStr.writeChar('>');
 
         //真正的输出日志
-        Log4zStream lsLevelAfter(szLevelAfter, LOG4Z_LOG_BUF_SIZE);
+        Log4zStream lsLevelAfter(szLevelAfter, LOG4Z_LEVELAFTER_SIZE);
         //lsLevelAfter.writeChar(' ');
         if (log)
             lsLevelAfter.writeString(log);
