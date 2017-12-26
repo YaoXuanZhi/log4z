@@ -35,14 +35,15 @@ int main(int argc, char *argv[])
     signal(SIGINT, &signalFunc);
 
     ILog4zManager::getRef().config("config.cfg");
+    ILog4zManager::getRef().setLoggerDisplay(LOG4Z_MAIN_LOGGER_ID, false);
+    ILog4zManager::getRef().setLoggerDisplay(logid_dynamic, false);
+
     logid_dynamic = ILog4zManager::getRef().createLogger("dynamic");
     logid_fromfile = ILog4zManager::getRef().findLogger("fromfile");
     //start log4z
     ILog4zManager::getRef().start();
 
     //configure the output behaviour
-    ILog4zManager::getRef().setLoggerDisplay(LOG4Z_MAIN_LOGGER_ID, true);
-    ILog4zManager::getRef().setLoggerDisplay(logid_dynamic, true);
     ILog4zManager::getRef().setLoggerLevel(LOG4Z_MAIN_LOGGER_ID, LOG_LEVEL_DEBUG);
     ILog4zManager::getRef().setLoggerLevel(logid_dynamic, LOG_LEVEL_DEBUG);
     ILog4zManager::getRef().setLoggerMonthdir(logid_dynamic, true);

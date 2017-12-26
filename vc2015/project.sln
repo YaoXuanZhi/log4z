@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio 2012
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "advanced_test", "advanced_test.vcxproj", "{6BA80E07-A245-470E-B36C-4A869C401C03}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "log4z", "log4z.vcxproj", "{78726622-CC7B-4CE6-B836-5A124171104C}"
@@ -11,10 +9,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fast_test", "fast_test.vcxp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stress_test", "stress_test.vcxproj", "{E4EAF9EE-28C2-428F-96C0-F043773EF1CA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fflua_test", "fflua_test.vcxproj", "{6BA80E07-A245-470E-B36C-4A869C401C05}"
+EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Debug|x64 = Debug|x64
@@ -54,6 +51,14 @@ Global
 		{E4EAF9EE-28C2-428F-96C0-F043773EF1CA}.Release|Win32.Build.0 = Release|Win32
 		{E4EAF9EE-28C2-428F-96C0-F043773EF1CA}.Release|x64.ActiveCfg = Release|x64
 		{E4EAF9EE-28C2-428F-96C0-F043773EF1CA}.Release|x64.Build.0 = Release|x64
+		{6BA80E07-A245-470E-B36C-4A869C401C05}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6BA80E07-A245-470E-B36C-4A869C401C05}.Debug|Win32.Build.0 = Debug|Win32
+		{6BA80E07-A245-470E-B36C-4A869C401C05}.Debug|x64.ActiveCfg = Debug|x64
+		{6BA80E07-A245-470E-B36C-4A869C401C05}.Debug|x64.Build.0 = Debug|x64
+		{6BA80E07-A245-470E-B36C-4A869C401C05}.Release|Win32.ActiveCfg = Release|Win32
+		{6BA80E07-A245-470E-B36C-4A869C401C05}.Release|Win32.Build.0 = Release|Win32
+		{6BA80E07-A245-470E-B36C-4A869C401C05}.Release|x64.ActiveCfg = Release|x64
+		{6BA80E07-A245-470E-B36C-4A869C401C05}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
