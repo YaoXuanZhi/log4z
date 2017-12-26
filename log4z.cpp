@@ -539,7 +539,7 @@ public:
     virtual unsigned long long getStatusTotalPopQueue() { return _ullStatusTotalPopLog; }
     virtual unsigned int getStatusActiveLoggers();
 protected:
-    virtual LogData * makeLogData(LoggerId id, int level, const char* log = NULL, const char * file = NULL, int line = 0);
+    virtual LogData * makeLogData(LoggerId id, int level, bool isPrint = false, const char* log = NULL , const char * file = NULL, int line = 0);
 
     virtual void freeLogData(LogData * log);
     void showColorText(const char *text, int level = LOG_LEVEL_DEBUG);
@@ -1321,7 +1321,7 @@ LogerManager::~LogerManager()
     stop();
 }
 
-LogData * LogerManager::makeLogData(LoggerId id, int level, const char* log, const char * file, int line)
+LogData * LogerManager::makeLogData(LoggerId id, int level, bool isPrint, const char* log, const char * file, int line)
 {
     LogData * pLog = NULL;
     if (true)
@@ -1465,9 +1465,11 @@ LogData * LogerManager::makeLogData(LoggerId id, int level, const char* log, con
         lsLevelAfter.writeChar('\0');
 
         // 着色输出
-        showColorText(szLevelBefore, LOG_LEVEL_TRACE);
-        showColorText(szLevelStr, level);
-        showColorText(szLevelAfter, LOG_LEVEL_TRACE);
+        if (isPrint) {
+            showColorText(szLevelBefore, LOG_LEVEL_TRACE);
+            showColorText(szLevelStr, level);
+            showColorText(szLevelAfter, LOG_LEVEL_TRACE);
+        }
 
         //拼接日志
         Log4zStream ls(pLog->_content, LOG4Z_LOG_BUF_SIZE);
@@ -1682,7 +1684,7 @@ bool LogerManager::stop()
 {
     if (_runing)
     {
-        showColorText("log4z stopping \r\n", LOG_LEVEL_FATAL);
+        showColorText("log4z stopping \r\n", LOG_LEVEL_TRACE);
         _runing = false;
         wait();
         while (!_freeLogDatas.empty())

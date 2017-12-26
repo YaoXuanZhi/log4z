@@ -263,7 +263,7 @@ const char* const LOG4Z_DEFAULT_PATH = "./log/";
 //! default log filter level
 const int LOG4Z_DEFAULT_LEVEL = LOG_LEVEL_DEBUG;
 //! default logger display
-const bool LOG4Z_DEFAULT_DISPLAY = true;
+const bool LOG4Z_DEFAULT_DISPLAY = false;
 //! default logger output to file
 const bool LOG4Z_DEFAULT_OUTFILE = true;
 //! default logger month dir used status
@@ -368,7 +368,7 @@ public:
     virtual unsigned int getStatusActiveLoggers() = 0;
 
     // 在这里面拼接日志并彩屏输出
-    virtual LogData * makeLogData(LoggerId id, int level, const char* log = NULL, const char * file = NULL, int line = 0) = 0;
+    virtual LogData * makeLogData(LoggerId id, int level,bool isPrint, const char* log = NULL, const char * file = NULL, int line = 0) = 0;
     virtual void freeLogData(LogData * log) = 0;
 };
 
@@ -393,7 +393,7 @@ do{\
         char szBuff[LOG4Z_LOG_BUF_SIZE] = {0};\
         zsummer::log4z::Log4zStream __ss(szBuff, LOG4Z_LOG_BUF_SIZE);\
         __ss << log;\
-        zsummer::log4z::LogData * __pLog = zsummer::log4z::ILog4zManager::getPtr()->makeLogData(id, level, szBuff, file, line); \
+        zsummer::log4z::LogData * __pLog = zsummer::log4z::ILog4zManager::getPtr()->makeLogData(id, level, true, szBuff, file, line); \
         zsummer::log4z::ILog4zManager::getPtr()->pushLog(__pLog);\
     }\
 } while (0)
