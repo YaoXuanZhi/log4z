@@ -1474,9 +1474,9 @@ LogData * LogerManager::makeLogData(LoggerId id, int level, bool isPrint, const 
 
         //拼接日志
         Log4zStream ls(pLog->_content, LOG4Z_LOG_BUF_SIZE);
-        ls.writeString(szLevelBefore, lsLevelBefore.getCurrentLen());
-        ls.writeString(szLevelStr, lsLevelStr.getCurrentLen());
-        ls.writeString(szLevelAfter, lsLevelAfter.getCurrentLen());
+        ls.writeString(szLevelBefore);
+        ls.writeString(szLevelStr);
+        ls.writeString(szLevelAfter);
 
         pLog->_contentLen = ls.getCurrentLen();
     }
