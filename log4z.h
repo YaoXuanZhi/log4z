@@ -202,6 +202,10 @@
 #include <queue>
 #include <deque>
 
+#if defined(_WIN32) && (_MSC_VER < 1800)
+ inline int isnan(double x) { return x != x; }
+ inline int isinf(double x) { return !isnan(x) && isnan(x - x); }
+#endif
 
 //! logger ID type. DO NOT TOUCH
 typedef int LoggerId;
