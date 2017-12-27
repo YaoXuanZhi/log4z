@@ -1423,17 +1423,18 @@ LogData * LogerManager::makeLogData(LoggerId id, int level, bool isPrint, const 
         if (_loggers[pLog->_id]._threadId)
         {
             //lsLevelBefore.writeChar(' ');
-            lsLevelBefore.writeChar('[');
+            lsLevelBefore.writeChar('<');
             lsLevelBefore.writeULongLong(pLog->_threadID, 4);
-            lsLevelBefore.writeChar(']');
+            lsLevelBefore.writeChar('>');
         }
 
         //日志等级
         Log4zStream lsLevelStr(szLevelStr, LOG4Z_LEVELSTR_SIZE);
         //lsLevelStr.writeChar(' ');
-        lsLevelStr.writeChar('<');
+        lsLevelStr.writeChar('[');
         lsLevelStr.writeString(LOG_STRING[pLog->_level], LOG_STRING_LEN[pLog->_level]);
-        lsLevelStr.writeChar('>');
+        lsLevelStr.writeChar(']');
+        lsLevelStr.writeChar(':');
 
         //真正的输出日志
         Log4zStream lsLevelAfter(szLevelAfter, LOG4Z_LEVELAFTER_SIZE);
