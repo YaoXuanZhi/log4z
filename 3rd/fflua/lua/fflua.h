@@ -11,8 +11,8 @@
 #include <string>
 using namespace std;
 
-#include "lua/fflua_type.h"
-#include "lua/fflua_register.h"
+#include "fflua_type.h"
+#include "fflua_register.h"
 
 namespace ff
 {

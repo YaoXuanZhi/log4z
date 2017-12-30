@@ -7,7 +7,7 @@
 #include <stdio.h>
 using namespace std;
 
-#include "lua/fflua_type.h"
+#include "fflua_type.h"
 
 namespace ff
 {
