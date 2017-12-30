@@ -1466,7 +1466,7 @@ LogData * LogerManager::makeLogData(LoggerId id, int level, bool isPrint, const 
         lsLevelAfter.writeChar('\0');
 
         // 着色输出
-        if (isPrint) {
+        if (_loggers[pLog->_id]._display && isPrint) {
             showColorText(szLevelBefore, LOG_LEVEL_TRACE);
             showColorText(szLevelStr, level);
             showColorText(szLevelAfter, LOG_LEVEL_TRACE);
@@ -2137,11 +2137,6 @@ void LogerManager::run()
                 continue;
             }
 
-
-            if (curLogger._display)
-            {
-                showColorText(pLog->_content, pLog->_level);
-            }
             if (LOG4Z_ALL_DEBUGOUTPUT_DISPLAY )
             {
 #ifdef _WIN32
