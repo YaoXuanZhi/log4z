@@ -1,5 +1,4 @@
 
-#include "../log4z.h"
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
@@ -13,11 +12,12 @@
 #include <stdlib.h>
 #endif
 
-#include "lua/fflua.h"
+#include "fflua/lua/fflua.h"
+#include "Cliplus/Cliplus.h"
+#include "../log4z.h"
 
 using namespace zsummer::log4z;
 using namespace ff;
-
 
 class base_t
 {
@@ -91,113 +91,111 @@ static void lua_reg(lua_State* ls)
 
 }
 
-int main(int argc, char* argv[])
-{
-	ILog4zManager::getRef().setLoggerName(LOG4Z_MAIN_LOGGER_ID, "fflua");
-	ILog4zManager::getRef().setLoggerPath(LOG4Z_MAIN_LOGGER_ID, "./");
-	ILog4zManager::getRef().setLoggerDisplay(LOG4Z_MAIN_LOGGER_ID, false);
-	ILog4zManager::getRef().setLoggerLevel(LOG4Z_MAIN_LOGGER_ID, LOG_LEVEL_TRACE);
-	ILog4zManager::getRef().setLoggerFileLine(LOG4Z_MAIN_LOGGER_ID, false);
-	ILog4zManager::getRef().setLoggerThreadId(LOG4Z_MAIN_LOGGER_ID, false);
-	ILog4zManager::getRef().setLoggerOutFile(LOG4Z_MAIN_LOGGER_ID, true);
-	ILog4zManager::getRef().start();
-
-	fflua_t fflua;
-	try 
+class CCliApp:public CCliplus{
+public:
+	void LoadScript()
 	{
-		fflua.setModFuncFlag(true);
+		m_fflua.setModFuncFlag(true);
 		//! 注册C++ 对象到lua中
-		fflua.reg(lua_reg);
-
+		m_fflua.reg(lua_reg);
 		//! 载入lua文件
-		fflua.add_package_path("./");
+		m_fflua.add_package_path("./");
+		m_fflua.load_file("../test/test.lua");
+	}
 
-#ifdef _WIN32
-		fflua.load_file("../test/test.lua");
-#else
-		fflua.load_file("test.lua");
-#endif
-
-		bool bIsLoop = true;
-		while (bIsLoop)
-		{
-			char szCmd[512] = { 0 };
-			fgets(szCmd, sizeof(char) * sizeof(szCmd), stdin);
-
-			if (*szCmd == 0) {
-				Sleep(500);
-				continue;
-			}
-
-			if (strncmp(szCmd, ("\\q"), 2) == 0 || strncmp(szCmd, ("exit"), 4) == 0 ||
-				strncmp(szCmd, ("quit"), 4) == 0) {
-					break;
-			}
-			else if (strncmp(szCmd, "run", 3) == 0) {
-				LOGI("run lua code");
-				fflua.run_string("print(\"Hello World!!!\")");
-			}
-			else if (strncmp(szCmd, "stop", 4) == 0) {
-				LOGI("stop loop");
-				bIsLoop = false;
-			}
-			else if (strncmp(szCmd, "ldb", 3) == 0) {
-				LOGI("open ldb debugger");
-				//fflua.run_string("pause()");
-				fflua.call<void>("pause");
-			}else
-			{
-				LOGW("Invaild Input << "<< szCmd);
-			}
-		}
-
+	void TestScript()
+	{
 		//! 获取全局变量
 		int var = 0;
-		assert(0 == fflua.get_global_variable("test_var", var));
+		assert(0 == m_fflua.get_global_variable("test_var", var));
 		//! 设置全局变量
-		assert(0 == fflua.set_global_variable("test_var", ++var));
+		assert(0 == m_fflua.set_global_variable("test_var", ++var));
 
 		//! 执行lua 语句
-		fflua.run_string("print(\"exe run_string!!\")");
+		m_fflua.run_string("print(\"exe run_string!!\")");
 
 		//! 调用lua函数, 基本类型作为参数
 		int32_t arg1 = 1;
 		float   arg2 = 2;
 		double  arg3 = 3;
 		string  arg4 = "4";
-		fflua.call<bool>("test_func", arg1, arg2, arg3,  arg4);
-		fflua.call<bool>("Mod:funcTest1", arg1, arg2);
+		m_fflua.call<bool>("test_func", arg1, arg2, arg3,  arg4);
+		m_fflua.call<bool>("Mod:funcTest1", arg1, arg2);
 
 		//! 调用lua函数，stl类型作为参数， 自动转换为lua talbe
 		vector<int> vec;        vec.push_back(100);
 		list<float> lt;         lt.push_back((float)99.99);
 		set<string> st;         st.insert("OhNIce");
 		map<string, int> mp;    mp["key"] = 200;
-		fflua.call<string>("test_stl", vec, lt, st,  mp);
+		m_fflua.call<string>("test_stl", vec, lt, st,  mp);
 
 		//! 调用lua 函数返回 talbe，自动转换为stl结构
-		vec = fflua.call<vector<int> >("test_return_stl_vector");
-		lt  = fflua.call<list<float> >("test_return_stl_list");
-		st  = fflua.call<set<string> >("test_return_stl_set");
-		mp  = fflua.call<map<string, int> >("test_return_stl_map");
+		vec = m_fflua.call<vector<int> >("test_return_stl_vector");
+		lt  = m_fflua.call<list<float> >("test_return_stl_list");
+		st  = m_fflua.call<set<string> >("test_return_stl_set");
+		mp  = m_fflua.call<map<string, int> >("test_return_stl_map");
 
 		//! 调用lua函数，c++ 对象作为参数, foo_t 必须被注册过
 		foo_t* foo_ptr = new foo_t(456);
-		fflua.call<void>("test_object", foo_ptr);
+		m_fflua.call<void>("test_object", foo_ptr);
 
 		//! 调用lua函数，c++ 对象作为返回值, foo_t 必须被注册过 
-		assert(foo_ptr == fflua.call<foo_t*>("test_ret_object", foo_ptr));
+		assert(foo_ptr == m_fflua.call<foo_t*>("test_ret_object", foo_ptr));
 		//! 调用lua函数，c++ 对象作为返回值, 自动转换为基类
-		base_t* base_ptr = fflua.call<base_t*>("test_ret_base_object", foo_ptr);
+		base_t* base_ptr = m_fflua.call<base_t*>("test_ret_base_object", foo_ptr);
 		assert(base_ptr == foo_ptr);
+	}
+private:
+	fflua_t m_fflua;
 
+protected:
+	void AcceptCommand(char *szCmd)
+	{
+		if (strncmp(szCmd, "run", 3) == 0) {
+			LOGI("run lua code");
+			m_fflua.run_string("print(\"Hello World!!!\")");
+		}
+		else if (strncmp(szCmd, "ldb", 3) == 0) {
+			m_fflua.call<void>("pause","open ldb debugger", 1);
+		}else
+		{
+			LOGW("Invaild Input << "<< szCmd);
+		}
+	}
+
+	void ShowHelpTips()
+	{
+		LOGI("演示Cli窗口应用的功能");
+	}
+
+	void ShowQuitTip()
+	{
+		LOGI("按下任意键退出...");
+	}
+};
+
+int main(int argc, char* argv[])
+{
+	ILog4zManager::getRef().setLoggerName(LOG4Z_MAIN_LOGGER_ID, "fflua");
+	ILog4zManager::getRef().setLoggerPath(LOG4Z_MAIN_LOGGER_ID, "./");
+	//ILog4zManager::getRef().enableLogger(LOG4Z_MAIN_LOGGER_ID, false);
+	ILog4zManager::getRef().setLoggerDisplay(LOG4Z_MAIN_LOGGER_ID, true);
+	ILog4zManager::getRef().setLoggerLevel(LOG4Z_MAIN_LOGGER_ID, LOG_LEVEL_TRACE);
+	ILog4zManager::getRef().setLoggerFileLine(LOG4Z_MAIN_LOGGER_ID, false);
+	ILog4zManager::getRef().setLoggerThreadId(LOG4Z_MAIN_LOGGER_ID, false);
+	ILog4zManager::getRef().setLoggerOutFile(LOG4Z_MAIN_LOGGER_ID, true);
+	ILog4zManager::getRef().start();
+
+	CCliApp m_AppObj;
+	try 
+	{
+		m_AppObj.LoadScript();
+		m_AppObj.Open();
+		m_AppObj.TestScript();
 	}
 	catch (exception& e)
 	{
 		LOGF("exception:"<<e.what());
 	}
-#ifdef _WIN32
-	system("pause");
-#endif
 	return 0;
 }

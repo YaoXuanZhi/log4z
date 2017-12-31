@@ -91,7 +91,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>../3rd/fflua;../3rd/lua-5.3.4/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../3rd;../3rd/lua-5.3.4/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -131,7 +131,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>../3rd/fflua;../3rd/lua-5.3.4/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../3rd;../3rd/lua-5.3.4/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -161,6 +161,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\3rd\Cliplus\Cliplus.cpp" />
     <ClCompile Include="..\3rd\lua-5.3.4\src\lapi.c" />
     <ClCompile Include="..\3rd\lua-5.3.4\src\lauxlib.c" />
     <ClCompile Include="..\3rd\lua-5.3.4\src\lbaselib.c" />
@@ -198,6 +199,7 @@
     <ClCompile Include="..\log4z.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\3rd\Cliplus\Cliplus.h" />
     <ClInclude Include="..\3rd\fflua\lua\fflua.h" />
     <ClInclude Include="..\3rd\fflua\lua\fflua_register.h" />
     <ClInclude Include="..\3rd\fflua\lua\fflua_type.h" />
