@@ -202,9 +202,12 @@
 #include <queue>
 #include <deque>
 
-#if defined(_WIN32) && (_MSC_VER < 1800)
+#if defined(_WIN32) 
+#pragma warning(disable:4996)
+#if (_MSC_VER < 1800)
  inline int isnan(double x) { return x != x; }
  inline int isinf(double x) { return !isnan(x) && isnan(x - x); }
+#endif
 #endif
 
 //! logger ID type. DO NOT TOUCH
@@ -273,7 +276,7 @@ const char* const LOG4Z_DEFAULT_PATH = "./log/";
 //! default log filter level
 const int LOG4Z_DEFAULT_LEVEL = LOG_LEVEL_DEBUG;
 //! default logger display
-const bool LOG4Z_DEFAULT_DISPLAY = false;
+const bool LOG4Z_DEFAULT_DISPLAY = true;
 //! default logger output to file
 const bool LOG4Z_DEFAULT_OUTFILE = true;
 //! default logger month dir used status
@@ -429,32 +432,17 @@ do{\
 
 //! format input log.
 #ifdef LOG4Z_FORMAT_INPUT_ENABLE
-#ifdef _WIN32
 #define LOG_FORMAT(id, level, file, line, logformat, ...) \
-do{ \
-    if (zsummer::log4z::ILog4zManager::getPtr()->prePushLog(id,level)) \
-    {\
-        zsummer::log4z::LogData * __pLog = zsummer::log4z::ILog4zManager::getPtr()->makeLogData(id, level); \
-        int __logLen = _snprintf_s(__pLog->_content + __pLog->_contentLen, LOG4Z_LOG_BUF_SIZE - __pLog->_contentLen, _TRUNCATE, logformat, ##__VA_ARGS__); \
-        if (__logLen < 0) __logLen = LOG4Z_LOG_BUF_SIZE - __pLog->_contentLen; \
-        __pLog->_contentLen += __logLen; \
-        zsummer::log4z::ILog4zManager::getPtr()->pushLog(__pLog, file, line); \
-    }\
-} while (0)
-#else
-#define LOG_FORMAT(id, level, file, line, logformat, ...) \
-do{ \
-    if (zsummer::log4z::ILog4zManager::getPtr()->prePushLog(id,level)) \
-    {\
-        zsummer::log4z::LogData * __pLog = zsummer::log4z::ILog4zManager::getPtr()->makeLogData(id, level); \
-        int __logLen = snprintf(__pLog->_content + __pLog->_contentLen, LOG4Z_LOG_BUF_SIZE - __pLog->_contentLen,logformat, ##__VA_ARGS__); \
-        if (__logLen < 0) __logLen = 0; \
-        if (__logLen > LOG4Z_LOG_BUF_SIZE - __pLog->_contentLen) __logLen = LOG4Z_LOG_BUF_SIZE - __pLog->_contentLen; \
-        __pLog->_contentLen += __logLen; \
-        zsummer::log4z::ILog4zManager::getPtr()->pushLog(__pLog, file, line); \
-    } \
-}while(0)
-#endif
+	do{ \
+	if (zsummer::log4z::ILog4zManager::getPtr()->prePushLog(id,level)) \
+{\
+	char szBuff[LOG4Z_LEVELAFTER_SIZE] = {0};\
+	sprintf(szBuff, logformat, ##__VA_ARGS__);\
+	zsummer::log4z::LogData * __pLog = zsummer::log4z::ILog4zManager::getPtr()->makeLogData(id, level, true, szBuff, file, line);\
+	zsummer::log4z::ILog4zManager::getPtr()->pushLog(__pLog); \
+}\
+	} while (0)
+
 //!format string
 #define LOGFMT_TRACE(id, fmt, ...)  LOG_FORMAT(id, LOG_LEVEL_TRACE, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 #define LOGFMT_DEBUG(id, fmt, ...)  LOG_FORMAT(id, LOG_LEVEL_DEBUG, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
