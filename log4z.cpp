@@ -1460,17 +1460,17 @@ LogData * LogerManager::makeLogData(LoggerId id, int level, bool isPrint, const 
             lsLevelAfter.writeULongLong((unsigned long long)line);
         }
 
+        //追加换行符
+        lsLevelAfter.writeChar('\r');
+        lsLevelAfter.writeChar('\n');
+        lsLevelAfter.writeChar('\0');
+
         // 着色输出
         if (_loggers[pLog->_id]._display && isPrint) {
             showColorText(szLevelBefore, LOG_LEVEL_TRACE);
             showColorText(szLevelStr, level);
             showColorText(szLevelAfter, LOG_LEVEL_TRACE);
         }
-
-        //追加换行符
-        lsLevelAfter.writeChar('\r');
-        lsLevelAfter.writeChar('\n');
-        lsLevelAfter.writeChar('\0');
 
         //拼接日志
         Log4zStream ls(pLog->_content, LOG4Z_LOG_BUF_SIZE);
