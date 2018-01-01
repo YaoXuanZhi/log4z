@@ -108,6 +108,7 @@ unsigned int CCliplus::OnMessageLoop()
         }
         char szCmdBuff[nCmdLen] = { 0 };
         fgets(szCmdBuff, sizeof(char) * nCmdLen, stdin);
+		szCmdBuff[strlen(szCmdBuff) - 1] = '\0'; //按下Enter之后多出来的"\n"
 
         if (strncmp(szCmdBuff, "\\q", 2) == 0 ||
             strncmp(szCmdBuff, "exit", 4) == 0 ||
