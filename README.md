@@ -35,6 +35,7 @@ Log4z是一款开源的轻量级高性能的跨平台日志库 主要针对7*24�
 E:\GITHUB\LOG4Z\PROJECT\BIN  
 │──advanced_test.exe  
 │──config.cfg  
+│──fflua_test.exe  
 │──fast_test.exe  
 │──stress_test.exe  
 │  
@@ -52,24 +53,23 @@ E:\GITHUB\LOG4Z\PROJECT\BIN
 ───│────NetWork_2013101313_007196_002.log  
 ```  
 ### 日志内容[Log Content]  
-![fast_output_linux.png](https://raw.github.com/zsummer/wiki-pic/master/log4z/fast_output_linux.png)  
-![fast_output_windows.png](https://raw.github.com/zsummer/wiki-pic/master/log4z/fast_output_windows.png)  
+![image](https://user-images.githubusercontent.com/14124918/34468586-0e48a96c-ef47-11e7-815d-d3188f5615ef.png)
+![image](https://user-images.githubusercontent.com/14124918/34468617-b94d1974-ef47-11e7-809a-5712623a6064.png)
+
 ```
-2015-12-15 14:36:43.453 LOG_ALARM -----------------  log4z thread started!   ----------------------------
-2015-12-15 14:36:43.453 LOG_ALARM logger id=0 key=Main name=a.out path=./log/ level=1 display=1
-2015-12-15 14:36:43.503 LOG_DEBUG stream input *** LOGD LOGD LOGD LOGD ***  (main.cpp):10
-2015-12-15 14:36:43.503 LOG_INFO  stream input *** LOGI LOGI LOGI LOGI ***  (main.cpp):11
-2015-12-15 14:36:43.503 LOG_WARN  stream input *** LOGW LOGW LOGW LOGW ***  (main.cpp):12
-2015-12-15 14:36:43.503 LOG_ERROR stream input *** LOGE LOGE LOGE LOGE ***  (main.cpp):13
-2015-12-15 14:36:43.503 LOG_ALARM stream input *** LOGA LOGA LOGA LOGA ***  (main.cpp):14
-2015-12-15 14:36:43.503 LOG_FATAL stream input *** LOGF LOGF LOGF LOGF ***  (main.cpp):15
-2015-12-15 14:36:43.503 LOG_DEBUG format input *** LOGFMTD *** 123456 *** (main.cpp):20
-2015-12-15 14:36:43.503 LOG_INFO  format input *** LOGFMTI *** 123456 *** (main.cpp):21
-2015-12-15 14:36:43.503 LOG_WARN  format input *** LOGFMTW *** 123456 *** (main.cpp):22
-2015-12-15 14:36:43.503 LOG_ERROR format input *** LOGFMTE *** 123456 *** (main.cpp):23
-2015-12-15 14:36:43.503 LOG_ALARM format input *** LOGFMTA *** 123456 *** (main.cpp):24
-2015-12-15 14:36:43.503 LOG_FATAL format input *** LOGFMTF *** 123456 *** (main.cpp):25
-2015-12-15 14:36:43.503 LOG_ALARM main quit ... (main.cpp):27
+[2018-01-01 22:56:19][ALARM]:-----------------  log4z thread started!   ----------------------------
+[2018-01-01 22:56:21]<13032>[ERROR]:main LOGE advanced_test.cpp:150
+[2018-01-01 22:56:21]<13032>[ALARM]:main LOGA advanced_test.cpp:151
+[2018-01-01 22:56:21]<13032>[FATAL]:main LOGF advanced_test.cpp:152
+[2018-01-01 22:56:21]<13032>[FATAL]: = = = = = = = = = = = = = = =  = = = = =  advanced_test.cpp:153
+[2018-01-01 22:56:21]<13032>[DEBUG]:main LOGD advanced_test.cpp:147
+[2018-01-01 22:56:21]<13032>[INFO]:main LOGI advanced_test.cpp:148
+[2018-01-01 22:56:21]<13032>[WARN]:main LOGW advanced_test.cpp:149
+[2018-01-01 22:56:21]<13032>[ERROR]:main LOGE advanced_test.cpp:150
+[2018-01-01 22:56:21]<13032>[ALARM]:main LOGA advanced_test.cpp:151
+[2018-01-01 22:56:21]<13032>[FATAL]:main LOGF advanced_test.cpp:152
+[2018-01-01 22:56:21]<13032>[FATAL]: = = = = = = = = = = = = = = =  = = = = =  advanced_test.cpp:153
+[2018-01-01 22:56:29]<13032>[ALARM]:main quit .. hit 'enter' to exit. advanced_test.cpp:162
 ```
 ## Example  
 ```  
@@ -123,3 +123,7 @@ make
 Author: YaweiZhang  
 Mail: yawei.zhang@foxmail.com  
 GitHub: https://github.com/zsummer/log4z  
+
+Author: Yaoxuanzhi 
+Mail: yaoxuanzhi@outlook.com  
+GitHub: https://github.com/YaoXuanZhi/log4z
