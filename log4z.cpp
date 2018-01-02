@@ -1337,7 +1337,7 @@ LogData * LogerManager::makeLogData(LoggerId id, int level, bool isPrint, const 
         }
         if (pLog == NULL)
         {
-            pLog = new(malloc(sizeof(LogData) + LOG4Z_LOG_BUF_SIZE-1))LogData();
+            pLog = (LogData*)malloc(sizeof(LogData) + LOG4Z_LOG_BUF_SIZE - 1);
         }
     }
     //append precise time to log
