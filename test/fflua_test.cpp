@@ -96,7 +96,11 @@ static void lua_reg(lua_State* ls)
 #define MAX_ALPHA_VALUE 255
 #define LODWORD(ull) ((DWORD)((ULONGLONG)(ull) & 0x00000000ffffffff))
 
-bool SetTransparent(HWND hAlphaWnd, UINT uAlpha/*0..255*/, bool abColorKey = false, COLORREF acrColorKey = 0, bool abForceLayered = false)
+bool SetTransparent(HWND hAlphaWnd
+    , UINT uAlpha/*0..255*/
+    , bool bColorKey = false
+    , COLORREF clrMaskKey = 0
+    , bool bForceLayered = false)
 {
     UINT nTransparent = max(MIN_INACTIVE_ALPHA_VALUE,min(uAlpha,255));
 	DWORD dwExStyle = GetWindowLongPtr(hAlphaWnd, GWL_EXSTYLE);
@@ -113,7 +117,7 @@ bool SetTransparent(HWND hAlphaWnd, UINT uAlpha/*0..255*/, bool abColorKey = fal
             LOGA("Transparency: WS_EX_LAYERED was already enabled");
         }
 
-        DWORD nNewFlags = (((nTransparent < 255) || abForceLayered) ? LWA_ALPHA : 0) | (abColorKey ? LWA_COLORKEY : 0);
+        DWORD nNewFlags = (((nTransparent < 255) || bForceLayered) ? LWA_ALPHA : 0) | (bColorKey ? LWA_COLORKEY : 0);
 
         BYTE nCurAlpha = 0;
         DWORD nCurFlags = 0;
@@ -123,14 +127,14 @@ bool SetTransparent(HWND hAlphaWnd, UINT uAlpha/*0..255*/, bool abColorKey = fal
 
         if ((!bGet)
             || (nCurAlpha != nTransparent) || (nCurFlags != nNewFlags)
-            || (abColorKey && (nCurColorKey != acrColorKey)))
+            || (bColorKey && (nCurColorKey != clrMaskKey)))
         {
-            BOOL bSet = SetLayeredWindowAttributes(hAlphaWnd, acrColorKey, nTransparent, nNewFlags);
+            BOOL bSet = SetLayeredWindowAttributes(hAlphaWnd, clrMaskKey, nTransparent, nNewFlags);
             if (true)
             {
                 DWORD nErr = bSet ? 0 : GetLastError();
                 LOGFMTA("Transparency: Set(0x%08X, 0x%08X, %u, 0x%X) -> %u:%u",
-                    LODWORD(hAlphaWnd), acrColorKey, nTransparent, nNewFlags, bSet, nErr);
+                    LODWORD(hAlphaWnd), clrMaskKey, nTransparent, nNewFlags, bSet, nErr);
             }
         }
         else
