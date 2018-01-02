@@ -94,6 +94,14 @@ protected:
 	* 
 	*/
 	virtual void ShowQuitTip();
+
+	/** 
+	* @brief: 退出
+	* @return 无
+	* @note   
+	* 
+	*/
+    virtual bool OnQuit();
 };
 
 #endif

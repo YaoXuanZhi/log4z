@@ -4,6 +4,43 @@
 #include <windows.h>
 #pragma warning(disable:4996)
 
+/*****************************************************************************
+* [windows 控制台程序 响应 Ctrl+C](http://blog.csdn.net/shuiba1122/article/details/40950671)
+* [控制台程序输入CTRL+C后弹出异常的原因](http://blog.csdn.net/oilcode/article/details/8886806)
+*****************************************************************************/
+
+BOOL CtrlHandler(DWORD fdwCtrlType)
+{
+    switch (fdwCtrlType)
+    {
+        // Handle the CTRL-C signal.   
+    case CTRL_C_EVENT:
+        fputs("Ctrl-C event\n\n", stdout);
+        //Beep( 750, 300 );   
+        return(TRUE);
+        // CTRL-CLOSE: confirm that the user wants to exit.   
+    case CTRL_CLOSE_EVENT:
+        //Beep( 600, 200 );   
+        fputs("Ctrl-Close event\n\n", stdout);
+        return(TRUE);
+        // Pass other signals to the next handler.   
+    case CTRL_BREAK_EVENT:
+        //Beep( 900, 200 );   
+        fputs("Ctrl-Break event\n\n", stdout);
+        return FALSE;
+    case CTRL_LOGOFF_EVENT:
+        //Beep( 1000, 200 );   
+        fputs("Ctrl-Logoff event\n\n", stdout);
+        return FALSE;
+    case CTRL_SHUTDOWN_EVENT:
+        //Beep( 750, 500 );   
+        fputs("Ctrl-Shutdown event\n\n", stdout);
+        return FALSE;
+    default:
+        return FALSE;
+    }
+}
+
 namespace CliplusNsp {
     /** 
     * @brief: 获得控制台窗口句柄
@@ -73,6 +110,14 @@ void CCliplus::Close()
     ::PostMessage(CliplusNsp::GetConsoleWnd(), WM_KEYDOWN, VK_RETURN, NULL);
 }
 
+bool CCliplus::OnQuit()
+{
+    m_bLoop = false;
+    ShowQuitTip();
+    fgetchar();
+    return true;
+}
+
 void CCliplus::Open()
 {
     if (m_bLoop)
@@ -98,37 +143,46 @@ void CCliplus::Open()
 
 unsigned int CCliplus::OnMessageLoop()
 {
-    const int nCmdLen = 512;
-    m_bLoop = true;
-    while (m_bLoop)
+    // 重置Ctrl相关的信号作用
+    if (SetConsoleCtrlHandler((PHANDLER_ROUTINE)CtrlHandler, TRUE))
     {
-        if (!m_bAcceptCmd) {
-            Sleep(10);
-            continue;
-        }
-        char szCmdBuff[nCmdLen] = { 0 };
-        fgets(szCmdBuff, sizeof(char) * nCmdLen, stdin);
-		szCmdBuff[strlen(szCmdBuff) - 1] = '\0'; //按下Enter之后多出来的"\n"
+        const int nCmdLen = 512;
+        m_bLoop = true;
+        while (m_bLoop)
+        {
+            if (!m_bAcceptCmd) {
+                Sleep(10);
+                continue;
+            }
+            char szCmdBuff[nCmdLen] = { 0 };
+            fgets(szCmdBuff, sizeof(char) * nCmdLen, stdin);
 
-        if (strncmp(szCmdBuff, "\\q", 2) == 0 ||
-            strncmp(szCmdBuff, "exit", 4) == 0 ||
-            strncmp(szCmdBuff, "quit", 4) == 0) {
-            m_bLoop = false;
-            ShowQuitTip();
-            fgetchar();
-        }
-        else if (strncmp(szCmdBuff, "settop", 6) == 0) {
-            CliplusNsp::SetAlwaysOnTop(true);
-        }
-        else if (strncmp(szCmdBuff, "notop", 5) == 0) {
-            CliplusNsp::SetAlwaysOnTop(false);
-        }
-        else if (strncmp(szCmdBuff, "-h", 2) == 0 ||
-            strncmp(szCmdBuff, "/?", 2) == 0) {
-            ShowHelpTips();
-        }
-        else {
-            AcceptCommand(szCmdBuff);
+            if (*szCmdBuff == 0) {
+                Sleep(500);
+                if (OnQuit())
+                    break;
+            }
+
+            szCmdBuff[strlen(szCmdBuff) - 1] = '\0'; //按下Enter之后多出来的"\n"
+
+            if (strncmp(szCmdBuff, "\\q", 2) == 0 ||
+                strncmp(szCmdBuff, "exit", 4) == 0 ||
+                strncmp(szCmdBuff, "quit", 4) == 0) {
+                OnQuit();
+            }
+            else if (strncmp(szCmdBuff, "settop", 6) == 0) {
+                CliplusNsp::SetAlwaysOnTop(true);
+            }
+            else if (strncmp(szCmdBuff, "notop", 5) == 0) {
+                CliplusNsp::SetAlwaysOnTop(false);
+            }
+            else if (strncmp(szCmdBuff, "-h", 2) == 0 ||
+                strncmp(szCmdBuff, "/?", 2) == 0) {
+                ShowHelpTips();
+            }
+            else {
+                AcceptCommand(szCmdBuff);
+            }
         }
     }
 

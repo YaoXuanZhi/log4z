@@ -91,6 +91,63 @@ static void lua_reg(lua_State* ls)
 
 }
 
+#define MIN_ALPHA_VALUE 40
+#define MIN_INACTIVE_ALPHA_VALUE 0
+#define MAX_ALPHA_VALUE 255
+#define LODWORD(ull) ((DWORD)((ULONGLONG)(ull) & 0x00000000ffffffff))
+
+bool SetTransparent(HWND hAlphaWnd, UINT uAlpha/*0..255*/, bool abColorKey = false, COLORREF acrColorKey = 0, bool abForceLayered = false)
+{
+    UINT nTransparent = max(MIN_INACTIVE_ALPHA_VALUE,min(uAlpha,255));
+	DWORD dwExStyle = GetWindowLongPtr(hAlphaWnd, GWL_EXSTYLE);
+
+    {
+        if ((dwExStyle & WS_EX_LAYERED) == 0)
+        {
+            dwExStyle |= WS_EX_LAYERED;
+	        SetWindowLong(hAlphaWnd, GWL_EXSTYLE, dwExStyle);
+            LOGI("Transparency: Enabling WS_EX_LAYERED");
+        }
+        else
+        {
+            LOGA("Transparency: WS_EX_LAYERED was already enabled");
+        }
+
+        DWORD nNewFlags = (((nTransparent < 255) || abForceLayered) ? LWA_ALPHA : 0) | (abColorKey ? LWA_COLORKEY : 0);
+
+        BYTE nCurAlpha = 0;
+        DWORD nCurFlags = 0;
+        COLORREF nCurColorKey = 0;
+        BOOL bGet = FALSE;
+            bGet = GetLayeredWindowAttributes(hAlphaWnd, &nCurColorKey, &nCurAlpha, &nCurFlags);
+
+        if ((!bGet)
+            || (nCurAlpha != nTransparent) || (nCurFlags != nNewFlags)
+            || (abColorKey && (nCurColorKey != acrColorKey)))
+        {
+            BOOL bSet = SetLayeredWindowAttributes(hAlphaWnd, acrColorKey, nTransparent, nNewFlags);
+            if (true)
+            {
+                DWORD nErr = bSet ? 0 : GetLastError();
+                LOGFMTA("Transparency: Set(0x%08X, 0x%08X, %u, 0x%X) -> %u:%u",
+                    LODWORD(hAlphaWnd), acrColorKey, nTransparent, nNewFlags, bSet, nErr);
+            }
+        }
+        else
+            LOGA(L"Transparency: Attributes were not changed");
+        // Ask the window and its children to repaint
+        //RedrawWindow(hAlphaWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
+    }
+    return true;
+}
+
+HWND GetCliHelperWnd()
+{
+    char szWndTitle[256] = { 0 };
+    GetConsoleTitleA(szWndTitle, 256);
+    return FindWindowA("ConsoleWindowClass", szWndTitle);
+}
+
 class CCliApp:public CCliplus{
 public:
 	void LoadScript()
@@ -100,6 +157,7 @@ public:
 		m_fflua.reg(lua_reg);
 		//! 载入lua文件
 		m_fflua.add_package_path("./");
+		//m_fflua.load_file("test.lua");
 		m_fflua.load_file("../test/test.lua");
 	}
 
@@ -155,6 +213,13 @@ protected:
 			LOGI("run lua code");
 			m_fflua.run_string("print(\"Hello World!!!\")");
 		}
+		else if (strncmp(szCmd, "trans", 4) == 0) {
+            int nTransparency = 1;
+            sscanf(szCmd, "trans %d", &nTransparency);
+            LOGFMTA("透明度为：%d", nTransparency);
+            SetTransparent(GetCliHelperWnd(), nTransparency, true, RGB(100, 10, 50));
+            //SetTransparent(GetCliHelperWnd(), nTransparency);
+		}
 		else if (strncmp(szCmd, "ldb", 3) == 0) {
 			m_fflua.call<void>("pause","open ldb debugger", 1);
 		}else
@@ -181,7 +246,7 @@ int main(int argc, char* argv[])
 	//ILog4zManager::getRef().enableLogger(LOG4Z_MAIN_LOGGER_ID, false);
 	ILog4zManager::getRef().setLoggerDisplay(LOG4Z_MAIN_LOGGER_ID, true);
 	ILog4zManager::getRef().setLoggerLevel(LOG4Z_MAIN_LOGGER_ID, LOG_LEVEL_TRACE);
-	ILog4zManager::getRef().setLoggerFileLine(LOG4Z_MAIN_LOGGER_ID, false);
+	ILog4zManager::getRef().setLoggerFileLine(LOG4Z_MAIN_LOGGER_ID, true);
 	ILog4zManager::getRef().setLoggerThreadId(LOG4Z_MAIN_LOGGER_ID, false);
 	ILog4zManager::getRef().setLoggerOutFile(LOG4Z_MAIN_LOGGER_ID, true);
 	ILog4zManager::getRef().start();
