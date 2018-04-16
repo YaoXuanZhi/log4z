@@ -53,8 +53,8 @@ E:\GITHUB\LOG4Z\PROJECT\BIN
 ───│────NetWork_2013101313_007196_002.log  
 ```  
 ### 日志内容[Log Content]  
-![image](https://user-images.githubusercontent.com/14124918/34468586-0e48a96c-ef47-11e7-815d-d3188f5615ef.png)
-![image](https://user-images.githubusercontent.com/14124918/34468617-b94d1974-ef47-11e7-809a-5712623a6064.png)
+![advanced_test](https://github.com/YaoXuanZhi/log4z/advanced_test.png)
+![fflua_test](https://github.com/YaoXuanZhi/log4z/fflua_test.gif)
 
 ```
 [2018-01-01 22:56:19][ALARM]:-----------------  log4z thread started!   ----------------------------
